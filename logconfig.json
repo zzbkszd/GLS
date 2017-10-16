@@ -1,0 +1,30 @@
+{
+    "Logfile" : {
+        "Dir" : "D:\\data\\log",
+        "Filter" : {
+            "Contains" : "service.iciba.com",
+            "Datepos" : [29,38],
+            "Datebetween" : ["20171010","20171012"]
+        },
+        "Logtype" : ".gz"
+    },
+    "Task" : [
+        {
+            "Taskname" : "comunity_pv",
+            "Url" : "community/get/one",
+            "Groupby" : ["commentUserId","&date"]
+        },
+        {
+            "Taskname" : "comunity_uv",
+            "Url" : "community/get/one",
+            "Groupby" : ["commentUserId","&date"],
+            "Filter" : {
+                "v":["gte","9.0"],
+                "client" : ["eq","1"]
+            },
+            "Distanceby" : ["uuid"]
+        }
+    ],
+    "Outputdir" : "D:\\data",
+    "ScannerId" : "1"
+}
