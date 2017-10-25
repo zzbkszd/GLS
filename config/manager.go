@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"strings"
-	"os"
+	"fmt"
 )
 /**
 加载配置文件
@@ -20,6 +20,8 @@ func (config *LogConfig) Load(f string){
 		panic(jsonerr)
 	}
 
+	fmt.Println("Load config file from ",f," success!")
+
 }
 
 /**
@@ -32,9 +34,8 @@ func (config *LogConfig) FilterFile (name string) bool{
 	}
 
 	if len(config.Logfile.Filter.Datepos)>=2 {
-		prefix := strings.LastIndex(name,string(os.PathSeparator))
-		start := config.Logfile.Filter.Datepos[0]+prefix
-		end := config.Logfile.Filter.Datepos[1]+prefix
+		start := config.Logfile.Filter.Datepos[0]
+		end := config.Logfile.Filter.Datepos[1]
 		date := string([]rune(name)[start+1:end])
 		if len(config.Logfile.Filter.Datebetween) >=2 {
 			if date < config.Logfile.Filter.Datebetween[0] || date > config.Logfile.Filter.Datebetween[1]{

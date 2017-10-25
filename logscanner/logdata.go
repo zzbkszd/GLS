@@ -5,6 +5,7 @@ import (
 	"strings"
 	"fmt"
 	"time"
+	"regexp"
 )
 
 type LogData struct {
@@ -21,10 +22,16 @@ type LogData struct {
 	Params       map[string]string //参数列表
 	UserAgent    string            //用户UA
 }
+/**
+解析日志，构造结构体
+根据约定正则来截取数据
+*/
+func makeData(logstr string,reg *regexp.Regexp) *LogData {
+	return parseByReg(logstr,reg)
+}
 
 /**
 将日志按字段划分
-TODO 应该采取正则提取的形式，利于支持多种样式的日志
 */
 func parselog(line string) []string {
 	fields := strings.Fields(line)
@@ -51,23 +58,72 @@ func parselog(line string) []string {
 
 }
 
-/**
-解析日志，构造结构体
-TODO 需要支持按照输入格式来动态分析字段
-TODO 支持调用插件以支持更多样式的日志分析
-*/
-func makeData(logstr string) LogData {
-	log := parselog(logstr)
-	//fmt.Println(log)
-	if len(log) != 13 {
-		return LogData{}
+
+
+//根据正则提取
+func parseByReg(log string,reg *regexp.Regexp) *LogData{
+	names := reg.SubexpNames()
+	values := reg.FindStringSubmatch(log)
+	data := new(LogData)
+	params := make(map[string]string)
+	if len(names) != len(values) {
+		fmt.Println(log)
 	}
-	//fmt.Println(log)
+
+	for i,n := range names {
+		if i==0 || n=="" {
+			continue
+		}
+		v := values[i]
+		if v=="-" {
+			continue
+		}
+		switch n {
+		case "ip" :data.ClientIp = v
+		case "date":
+			date,timestamp := parseDate(v,"nginx_ori")
+			data.Date = date
+			data.Timestamp = timestamp
+		case "method":
+			data.Method = v
+		case "uri":
+			splitUrl := strings.Split(v, "?")
+			data.RequestUri = splitUrl[0]
+			if len(splitUrl) > 1 {
+				data.RequesStr = splitUrl[1]
+				params = parseParam(splitUrl[1])
+			}
+		case "code":
+			code,_ := strconv.Atoi(v)
+			data.ResponseCode = code
+		case "host":
+			data.Host = v
+		case "useragent":
+			data.UserAgent = v
+		case "cost":
+			costtime, _ := strconv.ParseFloat(v, 32)
+			data.CostTime = costtime
+		case "bodylength":
+			length,_ := strconv.Atoi(v)
+			data.BodyLength = length
+		}
+		data.Params = params
+	}
+
+	return data
+}
+
+//根据分割提取
+func parseBySplit(logstr string) *LogData {
+	log := parselog(logstr)
+	if len(log) != 13 {
+		return new(LogData)
+	}
 	date,timestamp := parseDate(string([]rune(log[3])[2:len(log[3])]),"nginx_ori")
 	requestStr := log[5]
 	requestFields := strings.Fields(requestStr)
 	if len(requestFields) < 2 {
-		return LogData{}
+		return new(LogData)
 	}
 	method := string([]rune(requestFields[0])[2:len(requestFields[0])])
 	splitUrl := strings.Split(requestFields[1], "?")
@@ -87,7 +143,7 @@ func makeData(logstr string) LogData {
 
 	data := LogData{ClientIp: log[0], Date: date, Method: method, RequesStr: requrl, ResponseCode: responseCode,
 		Host: log[10], UserAgent: log[9], CostTime: costtime, BodyLength: bodyLength, Params: params , RequestUri: splitUrl[0],Timestamp:timestamp}
-	return data
+	return &data
 }
 
 func parseDate(date,dateSrc string ) (string,int64) {
@@ -113,11 +169,7 @@ func parseDate(date,dateSrc string ) (string,int64) {
 		strDate = fmt.Sprintf("%s-%s-%s",year,month,day)
 		strTime = fmt.Sprintf("%s:%s:%s",hour,min,sec)
 		unixTime,_ := time.Parse("2006-01-02 15:04:05", strDate+" "+strTime)
-		//fmt.Println(unixTime.Unix())
 		timestamp = unixTime.Unix()
-		//if err != nil {
-		//	fmt.Println(timestamp)
-		//}
 
 	}
 	return strDate,timestamp

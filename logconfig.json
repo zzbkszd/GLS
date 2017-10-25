@@ -1,10 +1,10 @@
 {
     "Logfile" : {
-        "Dir" : "D:\\data\\log",
+        "Dir" : "I:\\nginx\\service.iciba.com",
         "Filter" : {
             "Contains" : "service.iciba.com",
-            "Datepos" : [29,38],
-            "Datebetween" : ["20171010","20171012"]
+            "Datepos" : [28,37],
+            "Datebetween" : ["20171010","20171029"]
         },
         "Logtype" : ".gz"
     },
@@ -12,15 +12,17 @@
         {
             "Taskname" : "comunity_pv",
             "Url" : "community/get/one",
-            "Groupby" : ["commentUserId","&date"]
+            "Groupby" : ["&date"],
+            "Filter" : {
+                "commentUserId":["eq","23844641"]
+            }
         },
         {
             "Taskname" : "comunity_uv",
             "Url" : "community/get/one",
-            "Groupby" : ["commentUserId","&date"],
+            "Groupby" : ["&date"],
             "Filter" : {
-                "v":["gte","9.0"],
-                "client" : ["eq","1"]
+                "commentUserId":["eq","23844641"]
             },
             "Distanceby" : ["uuid"]
         }

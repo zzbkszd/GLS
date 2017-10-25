@@ -2,7 +2,6 @@ package logscanner
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,10 +11,11 @@ import (
 
 type Context struct {
 	Buffer map[string]*DataBuffer // key为任务名称，为每个任务缓存buffer
+	EditMutex sync.Mutex      // 同步锁
+	Wg sync.WaitGroup
 }
 
 type DataBuffer struct {
-	EditMutex sync.Mutex      // 同步锁
 	UniMapper map[string]bool //去重映射
 	CntMapper map[string]int  // 计数映射
 }
@@ -46,10 +46,6 @@ func (buf *DataBuffer) init() {
 func (ctx *Context) Save2File(logConfig config.LogConfig) {
 
 	base := logConfig.OutputDir
-
-	jsonByte, _ := json.Marshal(ctx)
-
-	fmt.Println(string(jsonByte))
 
 	for task, dataBuf := range ctx.Buffer {
 
@@ -82,16 +78,19 @@ func createIfNotExist(path string) (bool, error) {
 */
 func (ctx *Context) CntData(task, key, unikey string) {
 	var dataBuf *DataBuffer
+	ctx.EditMutex.Lock()
+
+	//初始化
 	if ctx.Buffer[task] != nil {
 		dataBuf = ctx.Buffer[task]
 	} else {
 		dataBuf = MakeDataBuffer()
 	}
-	dataBuf.EditMutex.Lock()
+
 	if !dataBuf.UniMapper[unikey] || len(unikey)==0 {
 		dataBuf.UniMapper[unikey] = len(unikey)!=0
 		dataBuf.CntMapper[key] = dataBuf.CntMapper[key] + 1
 		ctx.Buffer[task] = dataBuf
 	}
-	dataBuf.EditMutex.Unlock()
+	ctx.EditMutex.Unlock()
 }

@@ -8,22 +8,24 @@ import (
 	"strings"
 	"scanlog/config"
 	"strconv"
-	"bytes"
+	"regexp"
+	"time"
 )
 
 type LogScanner struct {
 	path string // 文件路径
+	name string // 协程名称
 	config config.LogConfig //配置信息
 	ctx *Context //上下文信息
+	endchan chan int
 }
-
 
 /**
 日志处理工具
 */
 func (ls *LogScanner) Scan() {
-
 	fmt.Println("start read log file ", ls.path)
+	reg := regexp.MustCompile("^(?P<ip>[0-9\\.]{7,15}) - - \\[(?P<date>[^\\s]+) \\+[0-9]{4}\\] \"(?P<method>[A-Z]{0,4}) (?P<uri>[^\\s]+) [^\"]+\" (?P<code>[0-9]{3}) (?P<bodylength>[0-9]*) \".*?\" \"(?P<useragent>[^\"]*)\" \"(?P<host>[^\"]*?)\" (?P<costtime>[0-9.]*) \"(?P<postdata>[^\"]*)\"$")
 	file, e := os.Open(ls.path)
 	if e != nil {
 		panic(e)
@@ -45,32 +47,31 @@ func (ls *LogScanner) Scan() {
 	var totalLen = stat.Size()
 	var readLen int64
 	readLen=0
+	start := time.Now().UnixNano()
 	for {
 		//读取数据
 		line, prefix, _ := bufreader.ReadLine()
-		byteBuf := bytes.NewBuffer(line)
+		logStr := string(line)
 		for prefix {
 			l,pf,_ := bufreader.ReadLine()
-			byteBuf.Write(l)
+			logStr = logStr+string(l)
 			prefix = pf
 		}
-		line = byteBuf.Bytes()
 		if line == nil {
 			break
 		}
 
 		//计数
-		readLen+=(int64)(len(string(line)))
+		readLen+=(int64)(len(logStr))
 		c++
 
-		log := makeData(string(line))
+		log := makeData(logStr,reg)
 
 		//遍历所有task
 		for i:=0;i<len(ls.config.Task);i++ {
 			task := ls.config.Task[i]
-			uri := task.Url
 			//TODO 条件过滤
-			if strings.Contains(log.RequestUri, uri) {
+			if filterLog(log,task) {
 				//计算key与unikey
 				key := genKey(log,task.Groupby)
 				var unikey string
@@ -84,15 +85,39 @@ func (ls *LogScanner) Scan() {
 
 		//TODO 输出进度
 		if c%100000 == 0 && c != 0 {
-			fmt.Printf("%.2f%%\n",float64(float64(readLen)/float64(totalLen*5))*100)
+			fmt.Println("make cost:",time.Now().UnixNano()-start)
+			start = time.Now().UnixNano()
+			fmt.Printf("Task %s process : %.2f%%\n",ls.name,float64(float64(readLen)/float64(totalLen*5))*100)
 		}
 	}
-	//TODO 保存到文件
-	//UNDO 留在context统一处理
+	ls.ctx.Wg.Done()
+	ls.endchan <- 1
+}
+
+func filterLog( log *LogData, task config.Task) bool{
+	uri := task.Url
+	res := true
+	res = res && strings.Contains(log.RequestUri, uri)
+	if !res {
+		return res
+	}
+	filter := task.Filter
+	for k,v := range filter {
+		lk := log.Params[k]
+		op := v[0]
+		switch op {
+		case "eq":
+			res = res && (lk == v[1])
+		case "neq":
+			res = res && (lk != v[1])
+		}
+	}
+	return res
 
 }
 
-func genKey(log LogData,fields []string) string{
+
+func genKey(log *LogData,fields []string) string{
 	key := ""
 	for _,v := range fields {
 		switch v {
