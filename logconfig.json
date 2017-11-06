@@ -4,7 +4,7 @@
         "Filter" : {
             "Contains" : "service.iciba.com",
             "Datepos" : [28,37],
-            "Datebetween" : ["20171010","20171029"]
+            "Datebetween" : ["20171024","20171102"]
         },
         "Logtype" : ".gz"
     },
@@ -25,7 +25,26 @@
                 "commentUserId":["eq","23844641"]
             },
             "Distanceby" : ["uuid"]
+        },
+        {
+            "Taskname" : "comment",
+            "Url" : "community/post/one",
+            "Groupby" : ["&date"],
+            "Filter" : {
+                "commentUserId":["eq","23844641"],
+                "contentType":["neq","3"]
+            }
+        },
+        {
+            "Taskname" : "praise",
+            "Url" : "community/post/one",
+            "Groupby" : ["&date"],
+            "Filter" : {
+                "commentUserId":["eq","23844641"],
+                "contentType":["eq","3"]
+            }
         }
+
     ],
     "Outputdir" : "D:\\data",
     "ScannerId" : "1"

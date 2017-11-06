@@ -34,18 +34,6 @@ func Startup(config config.LogConfig) {
 			}
 		}
 	}
-	//for _,f:=range files {
-	//	if(skip>0){
-	//		skip--
-	//		fmt.Println("skip file "+f)
-	//		continue
-	//	}
-	//	ls := LogScanner{path:f,config:config,ctx:ctx,name:f+"-go-"+strconv.Itoa(gocnt)}
-	//	gocnt++
-	//	ctx.Wg.Add(1)
-	//	//TODO - 用线程池来处理
-	//	go ls.Scan()
-	//}
 	ctx.Wg.Wait()
 	fmt.Println("read log finish!")
 	ctx.Save2File(config)

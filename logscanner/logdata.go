@@ -21,13 +21,16 @@ type LogData struct {
 	CostTime     float64           //处理请求耗时
 	Params       map[string]string //参数列表
 	UserAgent    string            //用户UA
+	LogStr       string            //日志原文
 }
 /**
 解析日志，构造结构体
 根据约定正则来截取数据
 */
 func makeData(logstr string,reg *regexp.Regexp) *LogData {
-	return parseByReg(logstr,reg)
+	log := parseBySplit(logstr)
+	log.LogStr = logstr
+	return log
 }
 
 /**

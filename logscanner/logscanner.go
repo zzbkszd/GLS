@@ -67,21 +67,10 @@ func (ls *LogScanner) Scan() {
 
 		log := makeData(logStr,reg)
 
-		//遍历所有task
-		for i:=0;i<len(ls.config.Task);i++ {
-			task := ls.config.Task[i]
-			//TODO 条件过滤
-			if filterLog(log,task) {
-				//计算key与unikey
-				key := genKey(log,task.Groupby)
-				var unikey string
-				if len(task.Distanceby)>0 {
-					unikey = key + genKey(log,task.Distanceby)
-				}
-				ls.ctx.CntData(task.Taskname,key,unikey)
-				//TODO 支持调用插件以扩展功能
-			}
-		}
+		ls.calc(log)
+
+		//go ls.recall(log)
+
 
 		//TODO 输出进度
 		if c%100000 == 0 && c != 0 {
@@ -92,6 +81,33 @@ func (ls *LogScanner) Scan() {
 	}
 	ls.ctx.Wg.Done()
 	ls.endchan <- 1
+}
+
+func (ls *LogScanner) recall( log *LogData) {
+	ls.ctx.Wg.Add(1)
+	if strings.Contains(log.LogStr,"popo/feeds") {
+
+	}
+	ls.ctx.Wg.Done()
+}
+
+
+func (ls *LogScanner) calc( log *LogData ) {
+	//遍历所有task
+	for i:=0;i<len(ls.config.Task);i++ {
+		task := ls.config.Task[i]
+		//TODO 条件过滤
+		if filterLog(log,task) {
+			//计算key与unikey
+			key := genKey(log,task.Groupby)
+			var unikey string
+			if len(task.Distanceby)>0 {
+				unikey = key + genKey(log,task.Distanceby)
+			}
+			ls.ctx.CntData(task.Taskname,key,unikey)
+			//TODO 支持调用插件以扩展功能
+		}
+	}
 }
 
 func filterLog( log *LogData, task config.Task) bool{
