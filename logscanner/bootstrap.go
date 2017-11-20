@@ -15,6 +15,8 @@ func Startup(config config.LogConfig) {
 	//TODO 通过对文件做过滤和稳定排序以支持断点续传
 
 	files := ListDir(config.Logfile.Dir,config)
+	fmt.Println("scan files:")
+	fmt.Println(files)
 	ctx := MakeContext()
 	i := 0 //跳过指定个数的文件
 	gocnt := 0
@@ -35,8 +37,8 @@ func Startup(config config.LogConfig) {
 		}
 	}
 	ctx.Wg.Wait()
-	fmt.Println("read log finish!")
 	ctx.Save2File(config)
+	fmt.Println("read log finish!")
 }
 
 

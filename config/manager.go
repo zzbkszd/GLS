@@ -30,6 +30,7 @@ func (config *LogConfig) Load(f string){
 func (config *LogConfig) FilterFile (name string) bool{
 
 	if ! (strings.Contains(name,config.Logfile.Filter.Contains) && strings.HasSuffix(name,config.Logfile.Logtype)){
+		fmt.Println("filt file fail: ",name," by contains")
 		return false
 	}
 
@@ -39,6 +40,7 @@ func (config *LogConfig) FilterFile (name string) bool{
 		date := string([]rune(name)[start+1:end])
 		if len(config.Logfile.Filter.Datebetween) >=2 {
 			if date < config.Logfile.Filter.Datebetween[0] || date > config.Logfile.Filter.Datebetween[1]{
+				fmt.Println("filt file fail: ",name," by date:",date)
 				return false
 			}
 		}

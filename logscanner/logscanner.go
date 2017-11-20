@@ -79,13 +79,14 @@ func (ls *LogScanner) Scan() {
 			fmt.Printf("Task %s process : %.2f%%\n",ls.name,float64(float64(readLen)/float64(totalLen*5))*100)
 		}
 	}
+	ls.ctx.Save2FileTemp(ls.config)
 	ls.ctx.Wg.Done()
 	ls.endchan <- 1
 }
 
 func (ls *LogScanner) recall( log *LogData) {
 	ls.ctx.Wg.Add(1)
-	if strings.Contains(log.LogStr,"popo/feeds") {
+	if strings.Contains(log.LogStr,"popo") {
 
 	}
 	ls.ctx.Wg.Done()
@@ -128,6 +129,7 @@ func filterLog( log *LogData, task config.Task) bool{
 			res = res && (lk != v[1])
 		}
 	}
+
 	return res
 
 }

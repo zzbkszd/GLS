@@ -18,6 +18,7 @@ type Context struct {
 type DataBuffer struct {
 	UniMapper map[string]bool //去重映射
 	CntMapper map[string]int  // 计数映射
+	PlainText bytes.Buffer // 文本链接
 }
 
 func MakeContext() *Context {
@@ -61,6 +62,26 @@ func (ctx *Context) Save2File(logConfig config.LogConfig) {
 	}
 
 }
+
+func (ctx *Context) Save2FileTemp(logConfig config.LogConfig) {
+
+	base := logConfig.OutputDir
+
+	fmt.Println(ctx.Buffer)
+	for task, dataBuf := range ctx.Buffer {
+
+		str := ""
+		for key, cnt := range dataBuf.CntMapper {
+			str += fmt.Sprintf("%s , %d\n", key, cnt)
+		}
+		filePath := base + string(os.PathSeparator) + task+"-temp"
+		bufStr := bytes.NewBufferString(str)
+		ioutil.WriteFile(filePath, bufStr.Bytes(), os.ModeAppend)
+
+		fmt.Println("已保存文件至:", filePath)
+	}
+
+}
 func createIfNotExist(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -72,6 +93,8 @@ func createIfNotExist(path string) (bool, error) {
 	}
 	return false, err
 }
+
+
 
 /*
 	数据计数

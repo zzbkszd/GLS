@@ -1,51 +1,29 @@
 {
     "Logfile" : {
-        "Dir" : "I:\\nginx\\service.iciba.com",
+        "Dir" : "D:\\data\\log\\",
         "Filter" : {
             "Contains" : "service.iciba.com",
             "Datepos" : [28,37],
-            "Datebetween" : ["20171024","20171102"]
+            "Datebetween" : ["20171116","20171116"]
         },
         "Logtype" : ".gz"
     },
     "Task" : [
         {
-            "Taskname" : "comunity_pv",
-            "Url" : "community/get/one",
+            "Taskname" : "screen_uv",
+            "Tasktype" : "count",
+            "Url" : "/popo/open/screens/v3",
             "Groupby" : ["&date"],
-            "Filter" : {
-                "commentUserId":["eq","23844641"]
-            }
+            "Distanceby" : ["&clientIp"]
         },
         {
-            "Taskname" : "comunity_uv",
-            "Url" : "community/get/one",
-            "Groupby" : ["&date"],
-            "Filter" : {
-                "commentUserId":["eq","23844641"]
-            },
+            "Taskname" : "screen_uv_uuid",
+            "Tasktype" : "count",
+            "Url" : "/popo/open/screens/v3",
+            "Groupby" : ["&date","client"],
             "Distanceby" : ["uuid"]
-        },
-        {
-            "Taskname" : "comment",
-            "Url" : "community/post/one",
-            "Groupby" : ["&date"],
-            "Filter" : {
-                "commentUserId":["eq","23844641"],
-                "contentType":["neq","3"]
-            }
-        },
-        {
-            "Taskname" : "praise",
-            "Url" : "community/post/one",
-            "Groupby" : ["&date"],
-            "Filter" : {
-                "commentUserId":["eq","23844641"],
-                "contentType":["eq","3"]
-            }
         }
-
     ],
-    "Outputdir" : "D:\\data",
+    "Outputdir" : "D:\\data\\log\\",
     "ScannerId" : "1"
 }

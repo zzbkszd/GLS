@@ -24,6 +24,7 @@ type LogFile struct {
 
 type Task struct {
 	Taskname   string              //任务名称
+	Tasktype   string              //任务类型：count/plain/recall/store
 	Url        string              //过滤：包含url
 	Groupby    []string            //统计KEY， 按照key计数+1
 	Filter     map[string][]string //参数过滤 key:[op,value] op: gt,gte,eq,lte,lt,has,not+op等
